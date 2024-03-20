@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html style="height:100%;">
+
+<head>
+    <title>Contoh Peta Leaflet</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <style>
+        html,
+        body,
+        #mapid {
+            height: 600px;
+        }
+
+        #map-header {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            color: #fff;
+            z-index: 1000;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+
+        #mapid {
+            z-index: 1;
+        }
+
+        .leaflet-popup-content {
+            width: 250px;
+            height: 100px;
+        }
+
+        .col {
+            float: left;
+            width: 35%;
+        }
+
+        .col2 {
+            float: left;
+            width: 65%;
+            text-align: right;
+        }
+
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map-header">Ini Peta Dunia</div>
+    <div id="mapid"></div>
+    <button id="btnKirim">Simpan</button>
+
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.min.js"></script>
+    <script>
+        var mymap = L.map('mapid').setView([-8.4095188, 115.188919], 11);
+
+        var defaultLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+            maxZoom: 18,
+        }).addTo(mymap);
+
+        var satelliteLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+        });
+
+        var baseLayers = {
+            "Default": defaultLayer,
+            "Satelit": satelliteLayer
+        };
+
+        var markers = [];
+        var isOnDrag = false;
+
+        var myIcon = L.icon({
+            iconUrl: 'pin.png',
+            iconSize: [40, 40],
+            iconAnchor: [20, 40],
+        });
+
+        formatContent = function(lat, lng, index) {
+            return `
+                <div class="wrapper">
+                    <div class="row">
+                        <div class="cell merged" style="text-align:center">Marker [ ${index+1} ]</div>
+                    </div>
+                    <div class="row">
+                        <div class="col">Latitude</div>
+                        <div class="col2">${lat}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col">Longitude</div>
+                        <div class="col2">${lng}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col">Left click</div>
+                        <div class="col2">New marker / show popup</div>
+                    </div>
+                    <div class="row">
+                        <div class="col">Right click</div>
+                        <div class="col2">Delete marker</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        addMarker = function(latlng, index) {
+            var marker = L.marker(latlng, {
+                icon: myIcon,
+                draggable: true
+            }).addTo(mymap);
+
+            var popup = L.popup({
+                    offset: [0, -30]
+                })
+                .setLatLng(latlng);
+
+            marker.bindPopup(popup);
+
+            marker.on('click', function() {
+                popup.setLatLng(marker.getLatLng()),
+                    popup.setContent(formatContent(marker.getLatLng().lat, marker.getLatLng().lng, index));
+            });
+
+            marker.on('dragstart', function(event) {
+                isOnDrag = true;
+            });
+
+            marker.on('drag', function(event) {
+                popup.setLatLng(marker.getLatLng()),
+                    popup.setContent(formatContent(marker.getLatLng().lat, marker.getLatLng().lng, index));
+                marker.openPopup();
+            });
+
+            marker.on('dragend', function(event) {
+                setTimeout(function() {
+                    isOnDrag = false;
+                }, 500);
+            });
+
+            marker.on('contextmenu', function(event) {
+                markers.forEach(function(m, i) {
+                    if (marker == m) {
+                        m.removeFrom(mymap);
+                        markers.splice(i, 1);
+                        mymap.zoomOut(); // Zoom out sedikit setelah menghapus marker
+                    }
+                });
+            });
+
+            return marker;
+        }
+
+        mymap.on('click', function(e) {
+            if (!isOnDrag) {
+                var newMarker = addMarker(e.latlng, markers.length);
+                markers.push(newMarker);
+            }
+        });
+
+        var btnKirim = document.getElementById('btnKirim');
+        btnKirim.addEventListener('click', function() {
+            var koordinat = markers.map(function(marker) {
+                return [marker.getLatLng().lat, marker.getLatLng().lng];
+            });
+
+            fetch("simpan.php", {
+                method: "POST",
+                body: JSON.stringify(koordinat),
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }).then(function(response) {
+                return response.json();
+            }).then(function(data) {
+                console.log(data);
+            }).catch(function(error) {
+                console.log(error);
+            });
+        });
+
+        fetch("baca.php").then(function(response) {
+            return response.json();
+        }).then(function(data) {
+            data.forEach(function(c, i) {
+                let latlng = L.latLng(c[0], c[1]);
+                var newMarker = addMarker(latlng, markers.length);
+                markers.push(newMarker);
+            })
+        }).catch(function(error) {
+            console.log(error);
+        });
+
+        L.control.layers(baseLayers).addTo(mymap);
+
+        // Menambahkan event listener untuk zoom ke lokasi saat mengklik
+        mymap.on('click', function(e) {
+            mymap.setView(e.latlng, mymap.getZoom() + 1); // Melakukan zoom ke lokasi yang diklik
+        });
+    </script>
+</body>
+
+</html>
+<div><hr size=1></div><div><?php show_source(__FILE__);?></div>

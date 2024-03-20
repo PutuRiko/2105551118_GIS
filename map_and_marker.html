@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html style="height:100%;">
+<head>
+    <title>Contoh Peta Leaflet</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <style>
+        html, body, #mapid {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map-header {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            color: #fff;
+            z-index: 1000;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+
+        #mapid {
+            height: calc(100% - 60px); /* Menyesuaikan tinggi peta */
+        }
+
+        .leaflet-popup-content {
+            width: 250px;
+            height: 100px;
+        }
+
+        .col {
+            float: left;
+            width: 50%;
+        }
+        .row:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+    </style>
+</head>
+<body style="height:100%; margin:0;">
+    <div id="map-header">Ini Peta Dunia</div>
+    <div id="mapid"></div>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.min.js"></script>
+    <script>
+        // Menampilkan peta
+        var mymap = L.map('mapid').setView([-8.4095188, 115.188919], 11);
+
+        // Menambahkan layer peta default
+        var defaultLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+            maxZoom: 18,
+        }).addTo(mymap);
+
+        // Menambahkan layer peta satelit
+        var satelliteLayer = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
+            maxZoom: 20,
+            subdomains:['mt0','mt1','mt2','mt3']
+        });
+
+        // Grup layer untuk jenis peta
+        var baseLayers = {
+            "Default": defaultLayer,
+            "Satelit": satelliteLayer
+        };
+
+        // Menambahkan layer default ke peta
+        defaultLayer.addTo(mymap);
+
+        // Menambahkan kontrol layer
+        L.control.layers(baseLayers).addTo(mymap);
+
+        // Membuat icon dari gambar PNG
+        var myIcon = L.icon({
+            iconUrl: 'pin.png',
+            iconSize: [40, 40],
+            iconAnchor: [20, 40],
+        });
+
+        // Menambahkan marker
+        var marker = L.marker([-8.4095188, 115.188919], {
+            icon: myIcon,
+            draggable: true
+        }).addTo(mymap);
+
+        // Membuat popup baru
+        var popup = L.popup({ offset: [0, -30] })
+            .setLatLng(marker.getLatLng())
+            .setContent('Ini adalah marker di Bali!');
+
+        // Binding popup ke marker
+        marker.bindPopup(popup);
+
+        // Format popup content
+        formatContent = function (lat, lng) {
+            return `
+                <div class="wrapper">
+                    <div class="row">
+                        <div class="cell merged" style="text-align:center">Koordinat</div>
+                    </div>
+                    <div class="row">
+                        <div class="col">Latitude</div>
+                        <div class="col">${lat}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col">Longitude</div>
+                        <div class="col">${lng}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Menambahkan event listener pada marker
+        marker.on('click', function () {
+            popup.setLatLng(marker.getLatLng()),
+                popup.setContent(formatContent(marker.getLatLng().lat, marker.getLatLng().lng));
+        });
+
+        // Menambahkan event listener pada marker
+        marker.on('drag', function (event) {
+            popup.setLatLng(marker.getLatLng()),
+                popup.setContent(formatContent(marker.getLatLng().lat, marker.getLatLng().lng));
+            marker.openPopup();
+        });
+    </script>
+</body>
+</html>
+
+<div><hr size=1></div><div><?php show_source(__FILE__);?></div>
