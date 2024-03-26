@@ -8,15 +8,34 @@
     <script src="https://leaflet.github.io/Leaflet.Editable/src/Leaflet.Editable.js"></script>
     <script src="./Polyline.encoded.js"></script>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.min.css" />
-     <!-- Make sure you put this AFTER Leaflet's CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""/>
+         <!-- Make sure you put this AFTER Leaflet's CSS -->
      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""></script>    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
     <style>
-        #mapid { height: 500px; }
+         html, body {
+            height: 100%;
+            margin-top: 50px;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        #map-container {
+            position: absolute;
+            top: 50px;
+            bottom: 0;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        #mapid {
+            height: calc(100% - 80px);
+        }
 
         .leaflet-popup-content {
             width: 250px;
@@ -25,12 +44,7 @@
 
         .col {
             float: left;
-            width: 35%;
-        }
-        .col2 {
-            float: left;
-            width: 65%;
-            text-align: right;
+            width: 50%;
         }
         .row:after {
             content: "";
@@ -38,10 +52,41 @@
             clear: both;
         }
 
+        .navbar {
+            overflow: hidden;
+            background-color: #333; 
+            width: 100%;
+            position: fixed;
+            top: 0;
+            z-index: 1001;
+        }
+
+        .navbar a {
+            float: left;
+            display: block;
+            color: #f2f2f2;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+        }
+
+        .navbar a:hover {
+            background-color: #ddd; 
+            color: black; 
+        }
     </style>
 </head>
-<body>
-    <div id="mapid"></div>
+<body style="height:100%; margin:0;">
+    <nav class="navbar">
+        <a href="/mapmarker">Map and Marker</a>
+        <a href="/moremarker">More Marker</a>
+        <a href="/markercluster">Marker Cluster</a>
+        <a href="/polyline">Polyline</a>
+        <a href="/routing">Routing</a>
+    </nav>
+    <div id="map-container">
+        <div id="mapid"></div>
+    </div>    
     <button id="btnKirim">Simpan</button>
 
     <script>
